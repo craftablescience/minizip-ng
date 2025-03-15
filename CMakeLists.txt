@@ -344,6 +344,7 @@ if(MZ_LZMA)
         clone_repo(liblzma https://github.com/tukaani-project/xz master)
 
         # Don't automatically add all targets to the solution
+        set(XZ_NLS OFF)
         add_subdirectory(${LIBLZMA_SOURCE_DIR} ${LIBLZMA_BINARY_DIR} EXCLUDE_FROM_ALL)
 
         list(APPEND MINIZIP_INC ${LIBLZMA_SOURCE_DIR}/src/liblzma/api)
