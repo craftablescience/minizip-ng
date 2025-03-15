@@ -1,3 +1,5 @@
+cmake_policy(SET CMP0169 OLD)
+
 # Checkout remote repository
 macro(clone_repo name url tag)
     string(TOLOWER ${name} name_lower)
@@ -21,7 +23,7 @@ macro(clone_repo name url tag)
         FetchContent_Declare(${name}
             GIT_REPOSITORY ${${name_upper}_REPOSITORY}
             GIT_TAG ${${name_upper}_TAG}
-            SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/${name_lower})
+            SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/${name_lower}-src)
 
         FetchContent_GetProperties(${name} POPULATED ${name_lower}_POPULATED)
 
