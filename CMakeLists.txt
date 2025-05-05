@@ -270,7 +270,11 @@ if(MZ_BZIP2)
 
         set(PC_PRIVATE_LIBS "${PC_PRIVATE_LIBS} -lbz2")
     elseif(MZ_FETCH_LIBS)
-        clone_repo(bzip2 https://sourceware.org/git/bzip2.git master)
+        clone_repo(bzip2 https://gitlab.com/bzip2/bzip2.git master)
+        set(BZ_VERSION "1.1.0")
+        configure_file (
+            ${BZIP2_SOURCE_DIR}/bz_version.h.in
+            ${BZIP2_SOURCE_DIR}/bz_version.h)
 
         # BZip2 repository does not support cmake so we have to create
         # the bzip2 library ourselves
