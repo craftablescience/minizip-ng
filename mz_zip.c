@@ -115,6 +115,9 @@ typedef struct mz_zip_s {
 
     uint16_t version_madeby;
     char *comment;
+
+    uint8_t valve_xzp_version;      /* EXTENSION: 0 (regular), 2 (XZP2), 3 (XZP3) */
+    uint16_t valve_xzp_sector_size; /* EXTENSION: if this field is > 0, extra field data will be used for padding */
 } mz_zip;
 
 /***************************************************************************/
@@ -199,7 +202,7 @@ static uint16_t mz_zip_get_pk_verify(uint32_t dos_date, uint64_t crc, uint16_t f
 #endif
 
 /* Get info about the current file in the zip file */
-static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file *file_info, void *file_extra_stream) {
+static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file *file_info, void *file_extra_stream, uint8_t valve_xzp_version) {
     uint64_t ntfs_time = 0;
     uint32_t reserved = 0;
     uint32_t magic = 0;
@@ -268,6 +271,10 @@ static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file
         if (err == MZ_OK)
             err = mz_stream_read_uint16(stream, &file_info->extrafield_size);
         if (!local) {
+            if (valve_xzp_version == 2) {
+                // This field is duplicated from local header, but it shouldn't be!
+                file_info->extrafield_size = 0;
+            }
             if (err == MZ_OK)
                 err = mz_stream_read_uint16(stream, &file_info->comment_size);
             if (err == MZ_OK) {
@@ -591,7 +598,10 @@ static int32_t mz_zip_entry_needs_zip64(mz_zip_file *file_info, uint8_t local, u
     return MZ_OK;
 }
 
-static int32_t mz_zip_entry_write_header(void *stream, uint8_t local, mz_zip_file *file_info) {
+static int32_t mz_zip_entry_write_header(void *stream, uint8_t local, mz_zip_file *file_info, uint8_t valve_xzp_version) {
+    if (valve_xzp_version)
+        return MZ_WRITE_ERROR;
+
     uint64_t ntfs_time = 0;
     uint32_t reserved = 0;
     uint32_t dos_date = 0;
@@ -1291,7 +1301,7 @@ static int32_t mz_zip_recover_cd(void *handle) {
 
         /* Read local headers */
         memset(&local_file_info, 0, sizeof(local_file_info));
-        err = mz_zip_entry_read_header(zip->stream, 1, &local_file_info, local_file_info_stream);
+        err = mz_zip_entry_read_header(zip->stream, 1, &local_file_info, local_file_info_stream, zip->valve_xzp_version);
         if (err != MZ_OK)
             break;
 
@@ -1380,7 +1390,7 @@ static int32_t mz_zip_recover_cd(void *handle) {
                      local_file_info.flag);
 
         /* Rewrite central dir with local headers and offsets */
-        err = mz_zip_entry_write_header(cd_mem_stream, 0, &local_file_info);
+        err = mz_zip_entry_write_header(cd_mem_stream, 0, &local_file_info, zip->valve_xzp_version);
         if (err == MZ_OK)
             number_entry += 1;
 
@@ -1503,6 +1513,14 @@ int32_t mz_zip_open(void *handle, void *stream, int32_t mode) {
 
     zip->open_mode = mode;
 
+    /* Valve XZP stores version and sector size in plaintext in the comment field */
+    if (err == MZ_OK && strlen(zip->comment) >= 6 && !strncmp("XZP", zip->comment, 3) && isalnum(zip->comment[3]) && isalnum(zip->comment[5])) {
+    	char* commentNumber = zip->comment + 3;
+        zip->valve_xzp_version = strtol(commentNumber, &commentNumber, 10);
+    	commentNumber++; // space
+        zip->valve_xzp_sector_size = strtol(commentNumber, &commentNumber, 10);
+    }
+
     return err;
 }
 
@@ -1560,6 +1578,9 @@ int32_t mz_zip_set_comment(void *handle, const char *comment) {
     mz_zip *zip = (mz_zip *)handle;
     int32_t comment_size = 0;
     if (!zip || !comment)
+        return MZ_PARAM_ERROR;
+    /* Valve XZP needs to use the comment block to store metadata */
+    if (zip->valve_xzp_version)
         return MZ_PARAM_ERROR;
     free(zip->comment);
     comment_size = (int32_t)strlen(comment);
@@ -1663,6 +1684,38 @@ int32_t mz_zip_get_disk_number_with_cd(void *handle, uint32_t *disk_number_with_
     if (!zip || !disk_number_with_cd)
         return MZ_PARAM_ERROR;
     *disk_number_with_cd = zip->disk_number_with_cd;
+    return MZ_OK;
+}
+
+int32_t mz_zip_set_valve_xzp_version(void *handle, uint8_t valve_xzp_version) {
+    mz_zip *zip = (mz_zip *)handle;
+    if (!zip)
+        return MZ_PARAM_ERROR;
+    zip->valve_xzp_version = valve_xzp_version;
+    return MZ_OK;
+}
+
+int32_t mz_zip_get_valve_xzp_version(void *handle, uint8_t *valve_xzp_version) {
+    mz_zip *zip = (mz_zip *)handle;
+    if (!zip || !valve_xzp_version)
+        return MZ_PARAM_ERROR;
+    *valve_xzp_version = zip->valve_xzp_version;
+    return MZ_OK;
+}
+
+int32_t mz_zip_set_valve_xzp_sector_size(void *handle, uint8_t valve_xzp_sector_size) {
+    mz_zip *zip = (mz_zip *)handle;
+    if (!zip)
+        return MZ_PARAM_ERROR;
+    zip->valve_xzp_sector_size = valve_xzp_sector_size;
+    return MZ_OK;
+}
+
+int32_t mz_zip_get_valve_xzp_sector_size(void *handle, uint8_t *valve_xzp_sector_size) {
+    mz_zip *zip = (mz_zip *)handle;
+    if (!zip || !valve_xzp_sector_size)
+        return MZ_PARAM_ERROR;
+    *valve_xzp_sector_size = zip->valve_xzp_sector_size;
     return MZ_OK;
 }
 
@@ -1891,13 +1944,13 @@ int32_t mz_zip_entry_read_open(void *handle, uint8_t raw, const char *password) 
 
     err = mz_zip_entry_seek_local_header(zip);
     if (err == MZ_OK)
-        err = mz_zip_entry_read_header(zip->stream, 1, &zip->local_file_info, zip->local_file_info_stream);
+        err = mz_zip_entry_read_header(zip->stream, 1, &zip->local_file_info, zip->local_file_info_stream, zip->valve_xzp_version);
 
     if (err == MZ_FORMAT_ERROR && zip->disk_offset_shift > 0) {
         /* Perhaps we didn't compensated correctly for incorrect cd offset */
         err_shift = mz_stream_seek(zip->stream, zip->file_info.disk_offset, MZ_SEEK_SET);
         if (err_shift == MZ_OK)
-            err_shift = mz_zip_entry_read_header(zip->stream, 1, &zip->local_file_info, zip->local_file_info_stream);
+            err_shift = mz_zip_entry_read_header(zip->stream, 1, &zip->local_file_info, zip->local_file_info_stream, zip->valve_xzp_version);
         if (err_shift == MZ_OK) {
             zip->disk_offset_shift = 0;
             err = err_shift;
@@ -2023,7 +2076,7 @@ int32_t mz_zip_entry_write_open(void *handle, const mz_zip_file *file_info, int1
         err = MZ_SUPPORT_ERROR;
 #endif
     if (err == MZ_OK)
-        err = mz_zip_entry_write_header(zip->stream, 1, &zip->file_info);
+        err = mz_zip_entry_write_header(zip->stream, 1, &zip->file_info, zip->valve_xzp_version);
     if (err == MZ_OK)
         err = mz_zip_entry_open_int(zip, raw, compress_level, password);
 
@@ -2187,7 +2240,7 @@ int32_t mz_zip_entry_write_close(void *handle, uint32_t crc32, int64_t compresse
     zip->file_info.uncompressed_size = uncompressed_size;
 
     if (err == MZ_OK)
-        err = mz_zip_entry_write_header(zip->cd_mem_stream, 0, &zip->file_info);
+        err = mz_zip_entry_write_header(zip->cd_mem_stream, 0, &zip->file_info, zip->valve_xzp_version);
 
     /* Update local header with crc32 and sizes */
     if ((err == MZ_OK) && ((zip->file_info.flag & MZ_ZIP_FLAG_DATA_DESCRIPTOR) == 0) &&
@@ -2364,7 +2417,7 @@ static int32_t mz_zip_goto_next_entry_int(void *handle) {
 
     err = mz_stream_seek(zip->cd_stream, zip->cd_current_pos, MZ_SEEK_SET);
     if (err == MZ_OK)
-        err = mz_zip_entry_read_header(zip->cd_stream, 0, &zip->file_info, zip->file_info_stream);
+        err = mz_zip_entry_read_header(zip->cd_stream, 0, &zip->file_info, zip->file_info_stream, zip->valve_xzp_version);
     if (err == MZ_OK)
         zip->entry_scanned = 1;
     return err;
