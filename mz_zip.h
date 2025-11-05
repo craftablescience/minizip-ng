@@ -107,6 +107,18 @@ int32_t mz_zip_set_disk_number_with_cd(void *handle, uint32_t disk_number_with_c
 int32_t mz_zip_get_disk_number_with_cd(void *handle, uint32_t *disk_number_with_cd);
 /* Get the disk number containing the central directory record */
 
+int32_t mz_zip_set_valve_xzp_version(void *handle, uint8_t valve_xzp_version);
+/* Get the Valve XZP version, or 0 if not an XZP */
+
+int32_t mz_zip_get_valve_xzp_version(void *handle, uint8_t *valve_xzp_version);
+/* Set the Valve XZP version, use 0 if not an XZP */
+
+int32_t mz_zip_set_valve_xzp_sector_size(void *handle, uint8_t valve_xzp_sector_size);
+/* Get the Valve XZP sector size, or 0 if no sector padding */
+
+int32_t mz_zip_get_valve_xzp_sector_size(void *handle, uint8_t *valve_xzp_sector_size);
+/* Set the Valve XZP sector size, or 0 if no sector padding */
+
 /***************************************************************************/
 
 int32_t mz_zip_entry_is_open(void *handle);
