@@ -151,7 +151,7 @@ int32_t minizip_list(const char *path, int32_t encoding) {
             crypt = ' ';
 
         method = mz_zip_get_compression_method_string(file_info->compression_method);
-        mz_zip_time_t_to_tm(file_info->modified_date, &tmu_date);
+        mz_zip_time_t_to_tm(mz_zip_dosdate_to_time_t(file_info->modified_date), &tmu_date);
 
         if ((encoding > 0) && (file_info->flag & MZ_ZIP_FLAG_UTF8) == 0) {
             utf8_string = mz_os_utf8_string_create(file_info->filename, encoding);

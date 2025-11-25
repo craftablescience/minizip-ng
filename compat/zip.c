@@ -209,9 +209,9 @@ int zipOpenNewFileInZip5(zipFile file, const char *filename, const zip_fileinfo 
 
     if (zipfi) {
         if (zipfi->mz_dos_date != 0)
-            file_info.modified_date = mz_zip_dosdate_to_time_t(zipfi->mz_dos_date);
+            file_info.modified_date = zipfi->mz_dos_date;
         else
-            file_info.modified_date = zipConvertZipDateToTime(zipfi->tmz_date);
+            file_info.modified_date = mz_zip_time_t_to_dos_date(zipConvertZipDateToTime(zipfi->tmz_date));
 
         file_info.external_fa = (uint32_t)zipfi->external_fa;
         file_info.internal_fa = (uint16_t)zipfi->internal_fa;

@@ -27,7 +27,7 @@ typedef struct mz_zip_file_s {
     uint16_t version_needed;     /* version needed to extract */
     uint16_t flag;               /* general purpose bit flag */
     uint16_t compression_method; /* compression method */
-    time_t modified_date;        /* last modified date in unix time */
+    uint32_t modified_date;      /* last modified date in dos time */
     time_t accessed_date;        /* last accessed date in unix time */
     time_t creation_date;        /* creation date in unix time */
     uint32_t crc;                /* crc-32 */
