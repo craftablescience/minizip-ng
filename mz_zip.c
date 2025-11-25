@@ -2053,7 +2053,7 @@ int32_t mz_zip_entry_write_open(void *handle, const mz_zip_file *file_info, int1
     if (zip->file_info.flag & MZ_ZIP_FLAG_ENCRYPTED) {
 #ifdef HAVE_PKCRYPT
         /* Pre-calculated CRC value is required for PKWARE traditional encryption */
-        zip->file_info.pk_verify = mz_zip_get_pk_verify(zip->file_info->modified_date, zip->file_info.crc, zip->file_info.flag);
+        zip->file_info.pk_verify = mz_zip_get_pk_verify(zip->file_info.modified_date, zip->file_info.crc, zip->file_info.flag);
 #endif
 #ifdef HAVE_WZAES
         if (zip->file_info.aes_version && zip->file_info.aes_strength == 0)
