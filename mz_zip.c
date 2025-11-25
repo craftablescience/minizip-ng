@@ -1514,10 +1514,10 @@ int32_t mz_zip_open(void *handle, void *stream, int32_t mode) {
     zip->open_mode = mode;
 
     /* Valve XZP stores version and sector size in plaintext in the comment field */
-    if (err == MZ_OK && strlen(zip->comment) >= 6 && !strncmp("XZP", zip->comment, 3) && isalnum(zip->comment[3]) && isalnum(zip->comment[5])) {
-    	char* commentNumber = zip->comment + 3;
+    if (err == MZ_OK && zip->comment && strlen(zip->comment) >= 6 && !strncmp("XZP", zip->comment, 3) && isalnum(zip->comment[3]) && isalnum(zip->comment[5])) {
+        char* commentNumber = zip->comment + 3;
         zip->valve_xzp_version = strtol(commentNumber, &commentNumber, 10);
-    	commentNumber++; // space
+        commentNumber++; // space
         zip->valve_xzp_sector_size = strtol(commentNumber, &commentNumber, 10);
     }
 
