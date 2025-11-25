@@ -1380,7 +1380,7 @@ Opens an entry in the zip file for writing.
 mz_zip_file file_info = { 0 };
 
 file_info.filename = "newfile.txt";
-file_info.modified_date = time(NULL);
+file_info.modified_date = mz_zip_time_t_to_dos_date(time(NULL));
 file_info.version_madeby = MZ_VERSION_MADEBY;
 file_info.compression_method = MZ_COMPRESS_METHOD_STORE;
 file_info.flag = MZ_ZIP_FLAG_UTF8;
@@ -1433,7 +1433,7 @@ int32_t|len|Number of bytes to write|
 mz_zip_file file_info = { 0 };
 
 file_info.filename = "newfile.txt";
-file_info.modified_date = time(NULL);
+file_info.modified_date = mz_zip_time_t_to_dos_date(time(NULL));
 file_info.version_madeby = MZ_VERSION_MADEBY;
 file_info.compression_method = MZ_COMPRESS_METHOD_STORE;
 file_info.flag = MZ_ZIP_FLAG_UTF8;
@@ -1476,7 +1476,7 @@ mz_stream_mem_seek(mem_stream, 0, MZ_SEEK_SET);
 mz_zip_file file_info = { 0 };
 
 file_info.filename = "newfile.txt";
-file_info.modified_date = time(NULL);
+file_info.modified_date = mz_zip_time_t_to_dos_date(time(NULL));
 file_info.version_madeby = MZ_VERSION_MADEBY;
 file_info.compression_method = MZ_COMPRESS_METHOD_STORE;
 file_info.flag = MZ_ZIP_FLAG_UTF8;
@@ -1538,7 +1538,7 @@ mz_stream_mem_seek(mem_stream, 0, MZ_SEEK_SET);
 mz_zip_file file_info = { 0 };
 
 file_info.filename = "newfile.txt";
-file_info.modified_date = time(NULL);
+file_info.modified_date = mz_zip_time_t_to_dos_date(time(NULL));
 file_info.version_madeby = MZ_VERSION_MADEBY;
 file_info.compression_method = MZ_COMPRESS_METHOD_STORE;
 file_info.flag = MZ_ZIP_FLAG_UTF8;
@@ -1572,7 +1572,7 @@ Adds an entry to the zip with a memory buffer.
 mz_zip_file file_info = { 0 };
 
 file_info.filename = "newfile.txt";
-file_info.modified_date = time(NULL);
+file_info.modified_date = mz_zip_time_t_to_dos_date(time(NULL));
 file_info.version_madeby = MZ_VERSION_MADEBY;
 file_info.compression_method = MZ_COMPRESS_METHOD_STORE;
 file_info.flag = MZ_ZIP_FLAG_UTF8;
