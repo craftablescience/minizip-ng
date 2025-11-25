@@ -351,8 +351,8 @@ int unzGetCurrentFileInfo(unzFile file, unz_file_info *pfile_info, char *filenam
         pfile_info->version_needed = file_info->version_needed;
         pfile_info->flag = file_info->flag;
         pfile_info->compression_method = file_info->compression_method;
-        pfile_info->mz_dos_date = mz_zip_time_t_to_dos_date(file_info->modified_date);
-        unzConvertTimeToUnzTime(file_info->modified_date, &pfile_info->tmu_date);
+        pfile_info->mz_dos_date = file_info->modified_date;
+        unzConvertTimeToUnzTime(mz_zip_dosdate_to_time_t(file_info->modified_date), &pfile_info->tmu_date);
         pfile_info->crc = file_info->crc;
 
         pfile_info->size_filename = file_info->filename_size;
@@ -411,8 +411,8 @@ int unzGetCurrentFileInfo64(unzFile file, unz_file_info64 *pfile_info, char *fil
         pfile_info->version_needed = file_info->version_needed;
         pfile_info->flag = file_info->flag;
         pfile_info->compression_method = file_info->compression_method;
-        pfile_info->mz_dos_date = mz_zip_time_t_to_dos_date(file_info->modified_date);
-        unzConvertTimeToUnzTime(file_info->modified_date, &pfile_info->tmu_date);
+        pfile_info->mz_dos_date = file_info->modified_date;
+        unzConvertTimeToUnzTime(mz_zip_dosdate_to_time_t(file_info->modified_date), &pfile_info->tmu_date);
         pfile_info->crc = file_info->crc;
 
         pfile_info->size_filename = file_info->filename_size;

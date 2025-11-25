@@ -770,8 +770,8 @@ int32_t mz_zip_reader_entry_save_file(void *handle, const char *path) {
 
     if (err == MZ_OK) {
         /* Set the time of the file that has been created */
-        mz_os_set_file_date(pathwfs, reader->file_info->modified_date, reader->file_info->accessed_date,
-                            reader->file_info->creation_date);
+        mz_os_set_file_date(pathwfs, mz_zip_dosdate_to_time_t(reader->file_info->modified_date),
+                            reader->file_info->accessed_date, reader->file_info->creation_date);
     }
 
     if (err == MZ_OK) {
@@ -1655,7 +1655,9 @@ int32_t mz_zip_writer_add_file(void *handle, const char *path, const char *filen
     if (writer->aes)
         file_info.aes_version = MZ_AES_VERSION;
 
-    mz_os_get_file_date(path, &file_info.modified_date, &file_info.accessed_date, &file_info.creation_date);
+    time_t modified_date;
+    mz_os_get_file_date(path, &modified_date, &file_info.accessed_date, &file_info.creation_date);
+    file_info.modified_date = mz_zip_time_t_to_dos_date(modified_date);
     mz_os_get_file_attribs(path, &src_attrib);
 
     src_sys = MZ_HOST_SYSTEM(file_info.version_madeby);

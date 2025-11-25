@@ -206,7 +206,6 @@ static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file
     uint64_t ntfs_time = 0;
     uint32_t reserved = 0;
     uint32_t magic = 0;
-    uint32_t dos_date = 0;
     uint32_t field_pos = 0;
     uint16_t field_type = 0;
     uint16_t field_length = 0;
@@ -247,15 +246,14 @@ static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file
         if (err == MZ_OK)
             err = mz_stream_read_uint16(stream, &file_info->compression_method);
         if (err == MZ_OK) {
-            err = mz_stream_read_uint32(stream, &dos_date);
-            file_info->modified_date = mz_zip_dosdate_to_time_t(dos_date);
+            err = mz_stream_read_uint32(stream, &file_info->modified_date);
         }
         if (err == MZ_OK)
             err = mz_stream_read_uint32(stream, &file_info->crc);
 #ifdef HAVE_PKCRYPT
         if (err == MZ_OK && file_info->flag & MZ_ZIP_FLAG_ENCRYPTED) {
-            /* Use dos_date from header instead of derived from time in zip extensions */
-            file_info->pk_verify = mz_zip_get_pk_verify(dos_date, file_info->crc, file_info->flag);
+            /* Use modified time from header instead of derived from time in zip extensions */
+            file_info->pk_verify = mz_zip_get_pk_verify(file_info->modified_date, file_info->crc, file_info->flag);
         }
 #endif
         if (err == MZ_OK) {
@@ -362,7 +360,9 @@ static int32_t mz_zip_entry_read_header(void *stream, uint8_t local, mz_zip_file
 
                     if ((err == MZ_OK) && (ntfs_attrib_id == 0x01) && (ntfs_attrib_size == 24)) {
                         err = mz_stream_read_uint64(file_extra_stream, &ntfs_time);
-                        mz_zip_ntfs_to_unix_time(ntfs_time, &file_info->modified_date);
+                        time_t modified_date;
+                        mz_zip_ntfs_to_unix_time(ntfs_time, &modified_date);
+                        file_info->modified_date = mz_zip_time_t_to_dos_date(modified_date);
 
                         if (err == MZ_OK) {
                             err = mz_stream_read_uint64(file_extra_stream, &ntfs_time);
@@ -604,7 +604,6 @@ static int32_t mz_zip_entry_write_header(void *stream, uint8_t local, mz_zip_fil
 
     uint64_t ntfs_time = 0;
     uint32_t reserved = 0;
-    uint32_t dos_date = 0;
     uint16_t extrafield_size = 0;
     uint16_t field_type = 0;
     uint16_t field_length = 0;
@@ -744,9 +743,7 @@ static int32_t mz_zip_entry_write_header(void *stream, uint8_t local, mz_zip_fil
             err = mz_stream_write_uint16(stream, file_info->compression_method);
     }
     if (err == MZ_OK) {
-        if (file_info->modified_date != 0 && !mask)
-            dos_date = mz_zip_time_t_to_dos_date(file_info->modified_date);
-        err = mz_stream_write_uint32(stream, dos_date);
+        err = mz_stream_write_uint32(stream, file_info->modified_date);
     }
 
     if (err == MZ_OK)
@@ -2056,8 +2053,7 @@ int32_t mz_zip_entry_write_open(void *handle, const mz_zip_file *file_info, int1
     if (zip->file_info.flag & MZ_ZIP_FLAG_ENCRYPTED) {
 #ifdef HAVE_PKCRYPT
         /* Pre-calculated CRC value is required for PKWARE traditional encryption */
-        uint32_t dos_date = mz_zip_time_t_to_dos_date(zip->file_info.modified_date);
-        zip->file_info.pk_verify = mz_zip_get_pk_verify(dos_date, zip->file_info.crc, zip->file_info.flag);
+        zip->file_info.pk_verify = mz_zip_get_pk_verify(zip->file_info->modified_date, zip->file_info.crc, zip->file_info.flag);
 #endif
 #ifdef HAVE_WZAES
         if (zip->file_info.aes_version && zip->file_info.aes_strength == 0)
