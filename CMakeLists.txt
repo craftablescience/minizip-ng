@@ -335,6 +335,7 @@ if(MZ_LZMA)
     elseif(MZ_FETCH_LIBS)
         set(BUILD_TESTING OFF CACHE BOOL "Build lzma tests" FORCE)
 
+        set(XZ_NLS OFF)
         clone_repo(liblzma https://github.com/tukaani-project/xz master)
 
         list(APPEND MINIZIP_INC ${LIBLZMA_SOURCE_DIR}/src/liblzma/api)
