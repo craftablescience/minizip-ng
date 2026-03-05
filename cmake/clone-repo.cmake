@@ -27,7 +27,7 @@ macro(clone_repo name url tag)
             FetchContent_Declare(${name}
                 GIT_REPOSITORY ${${name_upper}_REPOSITORY}
                 GIT_TAG ${${name_upper}_TAG}
-                SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/${name_lower})
+                SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/${name_lower}-src)
 
             FetchContent_GetProperties(${name})
             if(NOT ${name_lower}_POPULATED)
@@ -38,14 +38,14 @@ macro(clone_repo name url tag)
                 FetchContent_Declare(${name}
                     GIT_REPOSITORY ${${name_upper}_REPOSITORY}
                     GIT_TAG ${${name_upper}_TAG}
-                    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/${name_lower}
+                    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/${name_lower}-src
                     SOURCE_SUBDIR ${_clone_repo_cmake_subdir}
                     EXCLUDE_FROM_ALL)
             else()
                 FetchContent_Declare(${name}
                     GIT_REPOSITORY ${${name_upper}_REPOSITORY}
                     GIT_TAG ${${name_upper}_TAG}
-                    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/${name_lower}
+                    SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/${name_lower}-src
                     EXCLUDE_FROM_ALL)
             endif()
 
